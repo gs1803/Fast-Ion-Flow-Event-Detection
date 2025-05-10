@@ -3,6 +3,10 @@ import pandas as pd
 from spacepy import pycdf
 
 
+def interpolate_columns(source_df, target_times, columns):
+    return {col: interp1d(source_df['Time'], source_df[col], kind='linear', fill_value='extrapolate')(target_times) for col in columns}
+
+
 def process_fgm_model(fgm_data_dir, dates=None, satellite='tha'):
     raw_fgm_matrix = pd.DataFrame(columns=['Time', 'Bx', 'By', 'Bz'])
 
