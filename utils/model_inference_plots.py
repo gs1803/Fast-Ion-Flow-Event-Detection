@@ -8,6 +8,16 @@ from datetime import datetime, timezone
 
 
 def plot_true_vs_pred(df, start_idx=0, end_idx=12500, dpi=100):
+    """
+    Plots true vs predicted event labels over time for a given segment of the DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing time-series data including 'Epoch_time', 'Event_label_80', and 'Event_pred'.
+        start_idx (int): Starting index for plotting (default=0).
+        end_idx (int): Ending index for plotting (default=12500).
+        dpi (int): Resolution of the plot (default=100).
+    """
+
     df = df.loc[start_idx:end_idx, :].copy().reset_index(drop=True)
     df['Epoch_time'] = pd.to_datetime(df['Epoch_time'], unit='s', utc=True)
     last_idx = len(df) - 1
@@ -50,6 +60,18 @@ def plot_true_vs_pred(df, start_idx=0, end_idx=12500, dpi=100):
 
 
 def plot_true_vs_pred_all(df, event_df, start_idx=0, end_idx=12500, dpi=100):
+    """
+    Plots true vs predicted event labels along with magnetic field components, rolling standard deviations,
+    conditional volatilities, and velocity for a given range.
+
+    Args:
+        df (pd.DataFrame): DataFrame with time-series data and predictions.
+        event_df (pd.DataFrame): DataFrame containing metadata for each event.
+        start_idx (int): Start index for slicing data (default=0).
+        end_idx (int): End index for slicing data (default=12500).
+        dpi (int): Resolution for plots (default=100).
+    """
+
     df = df.loc[start_idx:end_idx, :].copy().reset_index(drop=True)
     df['Epoch_time'] = pd.to_datetime(df['Epoch_time'], unit='s', utc=True)
     last_idx = len(df) - 1
@@ -124,6 +146,18 @@ def plot_true_vs_pred_all(df, event_df, start_idx=0, end_idx=12500, dpi=100):
 
 
 def plot_true_vs_pred_probas(y_test, y_pred_probas, thershold=0.5, start_idx=0, end_idx=20000, dpi=100):
+    """
+    Plots predicted probabilities of events versus true binary labels.
+
+    Args:
+        y_test (np.ndarray or pd.Series): Ground truth binary labels.
+        y_pred_probas (np.ndarray or pd.Series): Predicted event probabilities.
+        thershold (float): Decision threshold line to show on the plot (default=0.5).
+        start_idx (int): Start index of the time window (default=0).
+        end_idx (int): End index of the time window (default=20000).
+        dpi (int): Resolution of the plot (default=100).
+    """
+
     plt.figure(figsize=(15, 6), dpi=dpi)
     plt.axhline(thershold, label='Probability Threshold', color='red', linestyle='--', alpha=0.4)
     plt.plot(y_test[start_idx:end_idx], label="True Event", color='black')
@@ -141,6 +175,20 @@ def plot_true_vs_pred_probas(y_test, y_pred_probas, thershold=0.5, start_idx=0, 
 
 
 def plot_positive_class_roc(y_true, y_score, pos_label=1, dpi=100):
+    """
+    Plots the ROC curve for binary classification.
+
+    The ROC curve shows the trade-off between True Positive Rate (TPR) and False Positive Rate (FPR)
+    across different classification thresholds. The Area Under the Curve (AUC) summarizes performance:
+    higher AUC indicates better separability of classes.
+
+    Args:
+        y_true (np.ndarray or pd.Series): True binary labels.
+        y_score (np.ndarray or pd.Series): Predicted probabilities or scores.
+        pos_label (int): Label considered as the positive class (default=1).
+        dpi (int): Plot resolution (default=100).
+    """
+
     fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=pos_label)
     roc_auc = auc(fpr, tpr)
 
@@ -158,6 +206,14 @@ def plot_positive_class_roc(y_true, y_score, pos_label=1, dpi=100):
 
 
 def plot_raw_confusion_matrix(y_test, y_pred, dpi=100):
+    """
+    Plots a raw confusion matrix of predicted vs true labels.
+
+    Args:
+        y_test (np.ndarray or pd.Series): Ground truth labels.
+        y_pred (np.ndarray or pd.Series): Predicted labels.
+        dpi (int): Plot resolution (default=100).
+    """
     cm = confusion_matrix(y_test, y_pred)
     fig, ax1 = plt.subplots(figsize=(8, 5), dpi=dpi)
 
@@ -183,6 +239,20 @@ def plot_raw_confusion_matrix(y_test, y_pred, dpi=100):
 
 
 def event_analysis(event_groups, ratio_threshold, side='lower', target='Event_label_80', predictions='Event_pred'):
+    """
+    Identifies events based on the ratio of predicted to true labels falling below or above a threshold.
+
+    Args:
+        event_groups (DataFrameGroupBy): Grouped event data.
+        ratio_threshold (float): Threshold for inclusion.
+        side (str): "lower" for missed events, "upper" for strongly captured ones.
+        target (str): Column name for ground truth labels (default='Event_label_80').
+        predictions (str): Column name for predicted labels (default='Event_pred').
+
+    Returns:
+        list: Indices of sequences where the prediction ratio is below/above the threshold.
+    """
+
     ratios_capture = []
 
     for (key, _,cls), group in event_groups:
@@ -205,6 +275,18 @@ def event_analysis(event_groups, ratio_threshold, side='lower', target='Event_la
 
 
 def extract_max_features(sequences, df, event_type=True):
+    """
+    Extracts maximum feature values from each event or sequence in the dataset.
+
+    Args:
+        sequences (list of list): List of index lists representing time windows.
+        df (pd.DataFrame): Full time-series dataset.
+        event_type (bool): Whether sequences represent actual events (default=True).
+
+    Returns:
+        dict: Dictionary with max values for velocity, rolling stddev, and volatility components.
+    """
+
     max_vels, max_rstdsx, max_rstdsy, max_rstdsz = [], [], [], []
     max_volsx, max_volsy, max_volsz = [], [], []
 
@@ -231,6 +313,14 @@ def extract_max_features(sequences, df, event_type=True):
 
 
 def plot_vol_stdev_histogram(data, event_type='Missed'):
+    """
+    Plots histograms of max volatility and rolling standard deviation for magnetic field components.
+
+    Args:
+        data (dict): Dictionary containing max volatility and standard deviation features.
+        event_type (str): Label for the type of events plotted (e.g., 'Missed', 'Captured').
+    """
+
     fig, axes = plt.subplots(2, 3, figsize=(15, 12))
     bins = np.arange(0, 1.1, step=0.1)
 
@@ -256,6 +346,13 @@ def plot_vol_stdev_histogram(data, event_type='Missed'):
 
 
 def plot_vol_stdev_2d_histogram(data, event_type='Missed'):
+    """
+    Plots 2D histograms of rolling standard deviation vs. conditional volatility for each magnetic field component (Bx, By, Bz).
+    
+    Parameters:
+        data (dict): Dictionary containing max rolling stdev and volatility values for each component.
+        event_type (str): Label to include in the plot title (e.g., 'Missed' or 'Captured').
+    """
     fig, axes = plt.subplots(1, 3, figsize=(17, 5), constrained_layout=True)
     bins = np.arange(0.0, 1.05, step=0.05)
     components = ['Bx', 'By', 'Bz']
@@ -278,6 +375,14 @@ def plot_vol_stdev_2d_histogram(data, event_type='Missed'):
 
 
 def plot_vol_stdev_2d_avg_histogram(data, event_type='Missed'):
+    """
+    Plots a 2D histogram of the average rolling standard deviation vs. average conditional volatility 
+    across Bx, By, and Bz magnetic field components, including contour highlighting.
+    
+    Parameters:
+        data (dict): Dictionary containing max rolling stdev and volatility values for each component.
+        event_type (str): Label to include in the plot title (e.g., 'Missed' or 'Captured').
+    """
     plt.figure(figsize=(6, 4.5))
     bins = np.arange(0.0, 1.05, step=0.05)
     
