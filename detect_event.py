@@ -25,14 +25,14 @@ class TverskyBCEPerSequence(losses.Loss):
         Initializes the TverskyBCEPerSequence loss function.
         
         Parameters:
-        - alpha_t: Weight for false positives in the Tversky index.
-        - beta_t: Weight for false negatives in the Tversky index.
-        - alpha_f: Focal loss alpha parameter.
-        - gamma_f: Focal loss gamma parameter.
-        - event_weight: Weight applied to events in the loss calculation.
-        - smooth: Small smoothing value to avoid division by zero.
-        - reduction: Specifies the reduction method for the loss.
-        - name: The name of the loss function.
+            alpha_t: Weight for false positives in the Tversky index.
+            beta_t: Weight for false negatives in the Tversky index.
+            alpha_f: Focal loss alpha parameter.
+            gamma_f: Focal loss gamma parameter.
+            event_weight: Weight applied to events in the loss calculation.
+            smooth: Small smoothing value to avoid division by zero.
+            reduction: Specifies the reduction method for the loss.
+            name: The name of the loss function.
         """
         super().__init__(reduction=reduction, name=name)
         self.alpha_t = alpha_t

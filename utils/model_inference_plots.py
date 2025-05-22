@@ -374,10 +374,10 @@ def plot_vol_stdev_2d_histogram(data, event_type='Missed'):
     plt.show()
 
 
-def plot_vol_stdev_2d_avg_histogram(data, event_type='Missed'):
+def plot_vol_stdev_2d_avg_histogram(data, event_type='Missed', thershold=None):
     """
     Plots a 2D histogram of the average rolling standard deviation vs. average conditional volatility 
-    across Bx, By, and Bz magnetic field components, including contour highlighting.
+    across Bx, By, and Bz magnetic field components
     
     Parameters:
         data (dict): Dictionary containing max rolling stdev and volatility values for each component.
@@ -389,25 +389,90 @@ def plot_vol_stdev_2d_avg_histogram(data, event_type='Missed'):
     avg_stdev = np.mean([data[f'{comp}_stdev'] for comp in ['Bx', 'By', 'Bz']], axis=0)
     avg_vol = np.mean([data[f'{comp}_vol'] for comp in ['Bx', 'By', 'Bz']], axis=0)
 
-    counts, xedges, yedges, image = plt.hist2d(
+    if thershold:
+        mask = (avg_stdev <= 0.95) & (avg_vol <= 0.95)
+        avg_stdev = avg_stdev[mask]
+        avg_vol = avg_vol[mask]
+
+    cmap = plt.cm.plasma
+    cmap = cmap.copy()
+    cmap.set_under(color='white')
+
+    norm = mcolors.Normalize(vmin=0.001, vmax=None)
+
+    *_, image = plt.hist2d(
         avg_stdev,
         avg_vol,
         bins=[bins, bins],
-        cmap='plasma',
+        cmap=cmap,
+        norm=norm,
         edgecolor='black',
         linewidth=0.5
     )
-    
-    xcenters = 0.5 * (xedges[:-1] + xedges[1:])
-    ycenters = 0.5 * (yedges[:-1] + yedges[1:])
-    X, Y = np.meshgrid(xcenters, ycenters)
-
-    plt.contour(X, Y, counts.T, levels=0, colors='white', linewidths=1)
 
     plt.xlabel('Average Rolling Standard Deviation of Max Bx, By, Bz')
     plt.ylabel('Average Conditional Volatility of Max Bx, By, Bz')
     plt.title(f'{event_type} Events')
     plt.axis('square')
+    if thershold:
+        plt.xlim(0, 0.95)
+        plt.ylim(0, 0.95)
     plt.colorbar(image, label='Counts')
     plt.tight_layout()
+    plt.show()
+
+
+def plot_precision_recall(df_threshold, mode='optimal'):
+    """
+    Plot precision and recall (and optionally F1 score) across probability thresholds.
+
+    Parameters
+    df_threshold : pandas.DataFrame
+        DataFrame containing threshold values and corresponding precision, recall,
+        and (if using 'optimal' mode) F1 score. Must contain the columns:
+        - 'threshold'
+        - 'precision'
+        - 'recall'
+        - 'f1_score' (only required for mode='optimal')
+
+    mode : str, optional (default='optimal')
+        Determines which threshold evaluation strategy to visualize:
+        - 'optimal': Plots precision, recall, and F1 score; highlights the threshold with max F1.
+        - 'intersection': Plots precision and recall; highlights the threshold where precision equals recall.
+    """
+
+    plt.figure(figsize=(6, 5), dpi=100)
+    plt.plot(df_threshold['threshold'], df_threshold['precision'], color='red', label='Precision')
+    plt.plot(df_threshold['threshold'], df_threshold['recall'], color='blue', label='Recall')
+
+    if mode == 'intersection':
+        idx = np.where(df_threshold['precision'] == df_threshold['recall'])[0][0]
+        prob = df_threshold.loc[idx, 'threshold']
+        val = df_threshold.loc[idx, 'precision']
+
+        plt.axvline(prob, color='C1', linestyle='--', label=f'Threshold = {prob:.2f}')
+        plt.axhline(val, color='C2', linestyle='--', label=f'Precision = Recall = {val:.2f}')
+
+    elif mode == 'optimal':
+        plt.plot(df_threshold['threshold'], df_threshold['f1_score'], color='black', label='F1 Score')
+        idx = np.argmax(df_threshold['f1_score'])
+        prob = df_threshold.loc[idx, 'threshold']
+        precision = df_threshold.loc[idx, 'precision']
+        recall = df_threshold.loc[idx, 'recall']
+
+        plt.axvline(prob, color='C1', linestyle='--', label=f'Threshold = {prob:.2f}')
+        plt.plot(prob, precision, 'ro', markersize=10, label=f'Precision = {precision:.2f}')
+        plt.plot(prob, recall, 'bo', markersize=10, label=f'Recall = {recall:.2f}')
+
+    else:
+        raise ValueError("mode must be 'intersection' or 'optimal'")
+
+    plt.title("Precision and Recall at Different Probability Thresholds")
+    plt.xticks(np.arange(0.0, 1.1, 0.1))
+    plt.yticks(np.arange(0.0, 1.1, 0.1))
+    plt.xlim(0.0, 1.0)
+    plt.ylim(0.0, 1.0)
+    plt.xlabel("Probability Threshold")
+    plt.ylabel("Value")
+    plt.legend(bbox_to_anchor=(1.00, 1.01))
     plt.show()
