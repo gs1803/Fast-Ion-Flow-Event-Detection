@@ -3,93 +3,12 @@ import pandas as pd
 
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import MinMaxScaler
-
 from arch import arch_model
 
 import tensorflow as tf
 from keras import models, losses
 
-
-@tf.keras.utils.register_keras_serializable(package='Custom', name='TverskyBCEPerSequence')
-class TverskyBCEPerSequence(losses.Loss):
-    """
-    Custom loss function combining Tversky loss and binary cross-entropy (BCE) with focal loss.
-    It calculates loss per sequence and applies event weighting and smoothing.
-    """
-    
-    def __init__(self, alpha_t: float = 0.5, beta_t: float = 0.5, alpha_f: float = 0.5, gamma_f: float = 0.0,
-                 event_weight: float = 1.0, smooth: float = 1e-6,
-                 reduction: tf.keras.losses.Reduction = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-                 name: str = "tversky_bce_per_sequence") -> None:
-        """
-        Initializes the TverskyBCEPerSequence loss function.
-        
-        Parameters:
-            alpha_t: Weight for false positives in the Tversky index.
-            beta_t: Weight for false negatives in the Tversky index.
-            alpha_f: Focal loss alpha parameter.
-            gamma_f: Focal loss gamma parameter.
-            event_weight: Weight applied to events in the loss calculation.
-            smooth: Small smoothing value to avoid division by zero.
-            reduction: Specifies the reduction method for the loss.
-            name: The name of the loss function.
-        """
-        super().__init__(reduction=reduction, name=name)
-        self.alpha_t = alpha_t
-        self.beta_t = beta_t
-        self.alpha_f = alpha_f
-        self.gamma_f = gamma_f
-        self.event_weight = event_weight
-        self.smooth = smooth
-
-
-    def call(self, y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
-        """
-        Compute the custom loss value combining Tversky and BCE losses.
-
-        Args:
-            y_true (tensor): Ground truth values.
-            y_pred (tensor): Predicted values.
-
-        Returns:
-            tensor: The calculated loss value.
-        """
-        y_true = tf.reshape(y_true, [tf.shape(y_true)[0], -1])
-        y_pred = tf.reshape(y_pred, [tf.shape(y_pred)[0], -1])
-        y_pred = tf.clip_by_value(y_pred, 1e-7, 1. - 1e-7)
-
-        has_event = tf.cast(tf.reduce_sum(y_true, axis=1) > 0, tf.float32)
-
-        tp = tf.reduce_sum(y_true * y_pred, axis=1)
-        fn = tf.reduce_sum(y_true * (1 - y_pred), axis=1)
-        fp = tf.reduce_sum((1 - y_true) * y_pred, axis=1)
-
-        tversky = (tp + self.smooth) / (tp + self.alpha_t * fp + self.beta_t * fn + self.smooth)
-        fbce = losses.binary_focal_crossentropy(y_true, y_pred, alpha=self.alpha_f, gamma=self.gamma_f)
-        
-        final_loss = has_event * self.event_weight * (1 - tversky) + (1 - has_event) * fbce 
-
-        return final_loss
-
-
-    def get_config(self) -> dict:
-        """
-        Get the configuration of the loss function for serialization.
-
-        Returns:
-            dict: Config dictionary with loss parameters.
-        """
-        config = super().get_config()
-        config.update({
-            "alpha_t": self.alpha_t,
-            "beta_t": self.beta_t,
-            "alpha_f": self.alpha_f,
-            "gamma_f": self.gamma_f,
-            "event_weight": self.event_weight,
-            "smooth": self.smooth
-        })
-        
-        return config
+from utils.model_loss import TverskyBCEPerSequence
 
 
 class DetectEvents:
