@@ -71,7 +71,8 @@ The model takes in sequences of engineered features and outputs per-timestep pro
 - **Metrics**:
   - Precision, recall, and F1 score computed at multiple thresholds
   - Event-level evaluation using captured vs. missed intervals
-  - Calibration and lift analysis to validate reliability
+  - Missed to Captured Events ratio over time
+  - Data drift analysis
 
 - **Best Performance (10 Epochs, F1-Optimal Threshold = 0.58)**:
   - Precision: 0.76
