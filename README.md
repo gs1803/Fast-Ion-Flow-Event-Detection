@@ -46,7 +46,7 @@ Volatility was chosen as the modeling basis because:
 A hybrid approach was used that combines physics-aware statistical feature engineering with deep sequence modeling:
 
 - **Feature Engineering**:
-  - Volatility modeled using AR(1)-GARCH(1,1) to capture memory effects. The AR(1)-GARCH(1,1) can be interpreted as a stochastic difference equation -- a discrete-time analog to stochastic differential equations. This allows us to estimate both the drift and diffusion behavior of the magnetic field time series.
+  - Volatility modeled using AR(1)-GARCH(1,1) to capture memory effects. The AR(1)-GARCH(1,1) can be interpreted as a stochastic difference equation – a discrete-time analog to stochastic differential equations. This allows us to estimate both the drift and diffusion behavior of the magnetic field time series.
   - Localized fluctuation captured via 9-timestep rolling standard deviations
 
 - **Neural Network Architecture**:
