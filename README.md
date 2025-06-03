@@ -86,7 +86,5 @@ The model was found to generalize well across satellites and years, with consist
 
 This project demonstrates that volatility-driven modeling is an effective strategy for detecting fast-ion plasma flow events in the magnetosphere. By leveraging GARCH and rolling standard deviation features alongside a custom sequence learning architecture, we achieve robust, generalizable event detection on high-frequency satellite data.
 
-This work lays the foundation for future extensions involving other missions, continuous-time volatility modeling, and stochastic process formulations.
-
 ---
 
