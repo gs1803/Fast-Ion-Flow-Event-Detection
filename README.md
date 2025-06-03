@@ -19,7 +19,7 @@ This project proposes a scalable, data-driven approach for detecting fast-ion fl
 - **Sampling Rate**: 3-second frequency
 - **Data Volume**: ~60 million rows of magnetic field measurements
 - **Features Used**:
-  - $\( B_x, B_y, B_z \)$ magnetic field components
+  - $B_x, B_y, B_z$ magnetic field components
   - Derived volatility features:
     - AR(1)-GARCH(1,1) volatility estimates per component
     - 9-window rolling standard deviations per component
