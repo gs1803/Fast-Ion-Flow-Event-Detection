@@ -36,7 +36,7 @@ Traditional event detection models often rely on hand-tuned thresholds or statis
 
 Volatility was chosen as the modeling basis because:
 - It reflects local plasma instability and turbulence
-- It exhibits precursor signatures prior to fast-ion events
+- It has highly correlated movement with ion velocity 
 - It provides richer temporal dynamics than raw magnitude
 
 ---
