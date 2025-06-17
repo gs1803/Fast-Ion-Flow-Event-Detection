@@ -56,7 +56,7 @@ A hybrid approach was used that combines physics-aware statistical feature engin
   - Multi-head attention for per-timestep interpretability
   - Sequence-to-sequence output structure with aggregation at the interval level
   - Multi-Output Shared Representation Learning (MOSRL) to capture per timestep information and latent feature representations for event sequences 
-  - Trained using a custom loss function with Focal Binary Crossentropy and Tversky loss to address class imbalance
+  - Trained using a custom loss function with Focal Binary Crossentropy and Tversky loss to address class imbalance for per-timestep predictions, and uses Huber loss for the event ratio output.
 
 The model takes in sequences of engineered features and outputs per-timestep probabilities, which are aggregated to produce a final event classification for each interval.
 
