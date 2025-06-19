@@ -1,20 +1,39 @@
 import numpy as np
 import tensorflow as tf
 
-# Generator function to generate train and test batches without loading all the data into memory
 def generate_timeseries(X, y, n_timesteps, batch_size, start_idx, end_idx, stride):
-    while True:
-        X_batch = []        # Stores input sequences for the batch
-        y_batch = []        # Stores target time series values corresponding to each input timestep
-        y_seq_batch = []    # Stores sequence-level aggregated target values (e.g., mean over the sequence)
+    """
+    Generator function that yields batches of time series data for training or evaluation.
 
-        # Loop through the dataset with a sliding window
+    This function creates overlapping sliding windows of time series sequences and their
+    corresponding labels, yielding both timestep-level and sequence-level targets.
+
+    Args:
+        X (np.ndarray): Input features of shape (num_samples, num_features).
+        y (np.ndarray): Target time series values of shape (num_samples,).
+        n_timesteps (int): Number of time steps in each input sequence.
+        batch_size (int): Number of sequences per batch.
+        start_idx (int): Starting index for the sliding window.
+        end_idx (int): Ending index for the sliding window.
+        stride (int): Step size for sliding the window.
+
+    Yields:
+        tuple: A batch tuple containing:
+            - X_batch (tf.Tensor): Shape (batch_size, n_timesteps, num_features)
+            - targets (dict): Dictionary with:
+                - "time_output": tf.Tensor of shape (batch_size, n_timesteps, 1)
+                - "sequence_output": tf.Tensor of shape (batch_size, 1)
+    """
+    while True:
+        X_batch = []
+        y_batch = []
+        y_seq_batch = []
+
         for i in range(start_idx + n_timesteps, end_idx, stride):
             X_batch.append(X[i - n_timesteps:i, :])
-            y_batch.append(y[i - n_timesteps:i].reshape(-1, 1))  # Ensure y is shaped as (n_timesteps, 1)
-            y_seq_batch.append([np.mean(y[i - n_timesteps:i]).astype(np.float32)])  # Sequence-level label
+            y_batch.append(y[i - n_timesteps:i].reshape(-1, 1))
+            y_seq_batch.append([np.mean(y[i - n_timesteps:i]).astype(np.float32)])
 
-            # Once a full batch is ready, yield it
             if len(X_batch) == batch_size:
                 yield (
                     tf.convert_to_tensor(np.array(X_batch), dtype=tf.float32),
@@ -23,10 +42,8 @@ def generate_timeseries(X, y, n_timesteps, batch_size, start_idx, end_idx, strid
                         "sequence_output": tf.convert_to_tensor(np.array(y_seq_batch), dtype=tf.float32)
                     }
                 )
-                # Reset the batch containers
                 X_batch, y_batch, y_seq_batch = [], [], []
-        
-        # Yield the last partial batch if it exists
+
         if len(X_batch) > 0:
             yield (
                 tf.convert_to_tensor(np.array(X_batch), dtype=tf.float32),
@@ -37,8 +54,23 @@ def generate_timeseries(X, y, n_timesteps, batch_size, start_idx, end_idx, strid
             )
 
 
-# Tensorflow dataloader for the generator function to use with tf models
 def create_dataset(X, y, n_timesteps, batch_size, stride, start_idx, end_idx):
+    """
+    Creates a TensorFlow Dataset from a time series generator for use in model training or evaluation.
+
+    Args:
+        X (np.ndarray): Input features of shape (num_samples, num_features).
+        y (np.ndarray): Target time series values of shape (num_samples,).
+        n_timesteps (int): Number of time steps in each input sequence.
+        batch_size (int): Number of sequences per batch.
+        stride (int): Step size for sliding the window.
+        start_idx (int): Starting index for the sliding window.
+        end_idx (int): Ending index for the sliding window.
+
+    Returns:
+        tf.data.Dataset: A TensorFlow dataset yielding batches of (X_batch, target_dict),
+                         where target_dict contains "time_output" and "sequence_output".
+    """
     return tf.data.Dataset.from_generator(
         lambda: generate_timeseries(X, y, n_timesteps=n_timesteps, batch_size=batch_size,
                                     start_idx=start_idx, end_idx=end_idx, stride=stride),
