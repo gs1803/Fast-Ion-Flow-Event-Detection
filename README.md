@@ -26,7 +26,7 @@ This project proposes a scalable, data-driven approach for detecting fast-ion fl
 
 All features were scaled to [0, 1] using min-max normalization per satellite. Labels for fast-ion flow events were constructed based on velocity thresholds, applied independently per satellite.
 
-- Link for cleaned data: [Box Link](https://utdallas.box.com/s/jufvj71jfnmu7sn5fm2wgtee3o48i3zc)
+- Link for cleaned data: [Data Link](https://drive.google.com/drive/folders/132Fy_6yrEvcjCxQjDSScGpWxELH8jwNH?usp=sharing)
 
 ---
 
